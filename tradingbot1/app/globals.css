@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #080c14;
+  --panel: #0f1520;
+  --panel2: #141d2e;
+  --border: #1e2d40;
+  --text: #c8d6e8;
+  --dim: #6b7e9a;
+  --bull: #22c55e;
+  --bear: #ef4444;
+  --accent: #3b82f6;
+  --warn: #eab308;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--panel); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2e4060; }
+
+/* Panel utility */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+/* Number classes */
+.bull { color: var(--bull); }
+.bear { color: var(--bear); }
+.dim  { color: var(--dim); }
+.accent { color: var(--accent); }
+
+/* Score bar */
+.score-bar {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.score-pip {
+  width: 18px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.score-pip.active { background: var(--bull); }
+.score-pip.active.bear-dir { background: var(--bear); }
+
+/* Pulse animation for live indicator */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse { animation: pulse 2s infinite; }
+
+/* Flicker for price update */
+@keyframes flicker {
+  0%   { color: var(--warn); }
+  100% { color: var(--text); }
+}
+.price-tick { animation: flicker 0.5s ease-out; }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(30,45,64,0.5);
+}
+.data-table tr:hover td { background: var(--panel2); }
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-green  { background: var(--bull); color: #000; }
+.btn-red    { background: var(--bear); color: #fff; }
+.btn-blue   { background: var(--accent); color: #fff; }
+.btn-ghost  { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+
+/* Toggle */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle {
+  position: relative;
+  width: 40px; height: 22px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--bull); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* Tag badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.badge-long  { background: rgba(34,197,94,0.15); color: var(--bull); border: 1px solid rgba(34,197,94,0.3); }
+.badge-short { background: rgba(239,68,68,0.15);  color: var(--bear); border: 1px solid rgba(239,68,68,0.3); }
+.badge-paper { background: rgba(234,179,8,0.15);  color: var(--warn); border: 1px solid rgba(234,179,8,0.3); }
+.badge-live  { background: rgba(59,130,246,0.15); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }

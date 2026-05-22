@@ -1,0 +1,13 @@
+node_modules/
+.next/
+dist/
+*.log
+.env.local
+.env
+_old/
+mp3-transcriber/
+network-monitor/
+quantpulse-adaptive/
+shot_*.png
+pacman.html
+.claude/
