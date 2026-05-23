@@ -67,16 +67,16 @@ export function setLiveMode(v: boolean): void {
   if (v) _simMode = false;
   console.log(`[kucoinExec] LiveMode=${v}`);
 }
-/** Returns true when orders should be simulated (not sent to exchange). */
+/** Returns true when orders should be simulated (not sent to exchange).
+ *  Safe default: everything that isn't EXPLICITLY live is dry/sim.
+ *  This prevents accidentally going live when simulation is stopped. */
 export function isEffectiveDryRun(): boolean {
-  if (_liveMode) return false;        // explicit live always wins
-  return DRY_RUN || _simMode;
+  return !_liveMode;   // only explicit "Go Live" disables dry-run guard
 }
 export function getCurrentMode(): "LIVE" | "SIM" | "DRY" {
-  if (_liveMode)  return "LIVE";
-  if (_simMode)   return "SIM";
-  if (DRY_RUN)    return "DRY";
-  return "LIVE";
+  if (_liveMode) return "LIVE";
+  if (_simMode)  return "SIM";
+  return "DRY";        // safe default — previously (incorrectly) returned "LIVE"
 }
 
 if (!_apiKey || !_apiSecret || !_apiPassph) {
