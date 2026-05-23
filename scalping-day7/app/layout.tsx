@@ -1,19 +1,30 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Inter } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
-  title: "DayTrader7",
-  description: "Regime-aware autonomous day trading dashboard",
+  title: "Day-Trader Bot C · v7",
+  description: "Autonomous ATR/BB breakout day-trading dashboard",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-gray-950 text-gray-100 min-h-screen antialiased">
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className={`${inter.className} bg-white min-h-screen text-tv-text antialiased`}>
         {children}
       </body>
     </html>

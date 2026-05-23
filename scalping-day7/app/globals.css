@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, sans-serif);
+    background: #ffffff;
+    color: #131722;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar         { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track   { background: transparent; }
+  ::-webkit-scrollbar-thumb   { background: #d1d4dc; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9098a3; }
+  * { scrollbar-width: thin; scrollbar-color: #d1d4dc transparent; }
+}
+
+@layer components {
+  .card   { @apply bg-white border border-tv-border rounded-lg; }
+  .label  { @apply text-[11px] font-semibold uppercase tracking-wider text-tv-text2; }
+  .badge  { @apply text-[11px] font-bold px-1.5 py-0.5 rounded; }
+  .sep    { @apply border-t border-tv-border; }
+  .num    { @apply font-mono text-tv-text tabular-nums; }
+  .panel  { @apply card p-4; }
+}
