@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Inter } from "next/font/google";
 import { TradingProvider } from "@/lib/context";
 
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "Scalping Bot7",
-  description: "KuCoin Scalping Bot — v7 (UCB1 Self-Learning)",
+  title: "KuCoin Scalping Bot 7",
+  description: "Professional cryptocurrency scalping bot — v7",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-950 text-gray-100 min-h-screen">
+    <html lang="en" className={inter.variable}>
+      <body className={inter.className}>
         <TradingProvider>{children}</TradingProvider>
       </body>
     </html>
