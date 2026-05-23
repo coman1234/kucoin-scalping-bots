@@ -79,8 +79,8 @@ const STEPS = [
     icon: "📊",
     labelEn: "CONFIRM",
     labelFi: "VAHVISTA",
-    descEn: "PF ≥ 0.85 gate",
-    descFi: "PF ≥ 0.85 portti",
+    descEn: "PF ≥ 0.75 gate",
+    descFi: "PF ≥ 0.75 portti",
     phase: "confirming",
   },
   {
@@ -250,7 +250,7 @@ export default function PipelineStatus() {
   const oosWR       = pipeState.backtestResult?.winRate   ?? 0;
   const oosPF       = pipeState.backtestResult?.profitFactor ?? 0;
   const wrGood      = oosWR >= 50;
-  const pfGood      = oosPF >= 0.85;
+  const pfGood      = oosPF >= 0.75;
   const bothGood    = wrGood && pfGood;
 
   return (
@@ -407,7 +407,7 @@ export default function PipelineStatus() {
                 {isFi ? "Tuottokerroin" : "Profit Factor"}
               </div>
               <div className={cn("text-[8px] font-semibold mt-0.5", pfGood ? "text-tv-green" : "text-tv-red")}>
-                {pfGood ? "✓ ≥0.85" : "✗ <0.85"}
+                {pfGood ? "✓ ≥0.75" : "✗ <0.75"}
               </div>
             </div>
             <div className="bg-tv-bg2 rounded px-2 py-1.5 text-center">

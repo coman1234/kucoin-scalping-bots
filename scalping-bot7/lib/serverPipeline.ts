@@ -517,10 +517,11 @@ async function executePipeline(): Promise<void> {
     : (confirmGrossWins > 0 ? 99 : 0);
   const confirmWR = confirmTrades > 0 ? (confirmWins / confirmTrades) * 100 : 0;
 
-  // PF gate lowered from 1.0 → 0.85: the confirmation window is only ~22 days
+  // PF gate lowered from 1.0 → 0.75: the confirmation window is only ~22 days
   // which is too short to require strict PF ≥ 1.0 in all market conditions.
-  // WR ≥ 50% + PF ≥ 0.85 still ensures the system has a positive expectancy trajectory.
-  const validated = confirmWR >= 50 && confirmPF >= 0.85 && confirmTrades >= 20;
+  // 22-day windows have high variance; PF 0.75 catches severe curve-fits while
+  // allowing natural short-window variance. WR ≥ 50% remains the primary gate.
+  const validated = confirmWR >= 50 && confirmPF >= 0.75 && confirmTrades >= 20;
   const confirmResult = {
     profitFactor: confirmPF,
     winRate:      confirmWR,
@@ -556,7 +557,7 @@ async function executePipeline(): Promise<void> {
   } else {
     state.phase       = "error";
     state.step        = 3;
-    state.message     = `Confirm failed — WR ${confirmResult.winRate.toFixed(1)}% (need ≥50%) PF ${confirmResult.profitFactor.toFixed(2)} (need ≥0.85) trades ${confirmResult.totalTrades} (need ≥20)`;
+    state.message     = `Confirm failed — WR ${confirmResult.winRate.toFixed(1)}% (need ≥50%) PF ${confirmResult.profitFactor.toFixed(2)} (need ≥0.75) trades ${confirmResult.totalTrades} (need ≥20)`;
     state.completedAt = completedAt;
     state.nextRunAt   = nextRunAt;
     state.lastError   = state.message;
