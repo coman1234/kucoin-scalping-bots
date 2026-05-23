@@ -103,6 +103,32 @@ export default function TradingDashboard() {
   const isFi = language === "fi";
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("signal");
 
+  // ── Bottom panel collapse & sub-chart height ──────────────────────────────
+  const [workflowOpen,   setWorkflowOpen]   = useState(true);
+  const [subChartHeight, setSubChartHeight] = useState(120);   // px, user-draggable
+  const resizingRef  = useRef(false);
+  const resizeStartY = useRef(0);
+  const resizeStartH = useRef(0);
+
+  const onResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    resizingRef.current  = true;
+    resizeStartY.current = e.clientY;
+    resizeStartH.current = subChartHeight;
+    e.preventDefault();
+  }, [subChartHeight]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const delta = e.clientY - resizeStartY.current;
+      setSubChartHeight(Math.max(60, Math.min(300, resizeStartH.current + delta)));
+    };
+    const onUp = () => { resizingRef.current = false; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
+
   // ── Kynttilän klikkausanalyysi ────────────────────────────────────────────
   const [candleAnalysis,    setCandleAnalysis]    = useState<CandleAnalysisResult | null>(null);
   const [candleInspecting,  setCandleInspecting]  = useState(false);
@@ -153,16 +179,40 @@ export default function TradingDashboard() {
             )}
           </div>
 
-          {/* Sub-indicators (RSI / MACD) */}
-          <div className="h-[120px] flex-shrink-0 border-b border-tv-border bg-tv-bg2">
+          {/* Sub-indicators (RSI / MACD) — height user-resizable via drag handle */}
+          <div className="flex-shrink-0 border-b border-tv-border bg-tv-bg2" style={{ height: `${subChartHeight}px` }}>
             <SubCharts mode="detail" />
           </div>
 
-          {/* Pipeline + Backtester + Trade Journal */}
-          <div className="h-[220px] flex-shrink-0 overflow-y-auto bg-white border-t border-tv-border">
-            <div className="p-2">
-              <TradingWorkflow />
+          {/* Drag handle between sub-charts and workflow panel */}
+          <div
+            className="flex-shrink-0 h-[6px] bg-tv-bg3 border-y border-tv-border cursor-row-resize hover:bg-tv-blue/20 transition-colors flex items-center justify-center group select-none"
+            onMouseDown={onResizeMouseDown}
+            title={isFi ? "Vedä muuttaaksesi korkeutta" : "Drag to resize"}
+          >
+            <div className="w-8 h-[2px] rounded bg-tv-border group-hover:bg-tv-blue/60 transition-colors" />
+          </div>
+
+          {/* Pipeline + Backtester + Trade Journal — collapsible */}
+          <div className={cn(
+            "flex-shrink-0 bg-white border-t border-tv-border transition-all overflow-hidden",
+            workflowOpen ? "overflow-y-auto" : "h-[28px]"
+          )} style={workflowOpen ? { maxHeight: "260px" } : {}}>
+            {/* Collapse header */}
+            <div
+              className="sticky top-0 z-10 flex items-center justify-between bg-tv-bg2 border-b border-tv-border px-2 py-1 cursor-pointer select-none"
+              onClick={() => setWorkflowOpen(v => !v)}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wide text-tv-text2">
+                🤖 {isFi ? "Automaattinen optimoija & Backtester" : "Auto-Optimizer & Backtester"}
+              </span>
+              <span className="text-[11px] text-tv-text3 ml-2">{workflowOpen ? "▾" : "▸"}</span>
             </div>
+            {workflowOpen && (
+              <div className="p-2">
+                <TradingWorkflow />
+              </div>
+            )}
           </div>
 
         </div>
