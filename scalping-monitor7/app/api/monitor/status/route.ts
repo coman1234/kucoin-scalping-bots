@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
+import * as fs   from "node:fs";
+import * as path from "node:path";
+import * as os   from "node:os";
 
 // ── SHM helpers ───────────────────────────────────────────────────────────────
 
@@ -29,20 +29,27 @@ interface OptimizerStatus {
   message?: string;
 }
 
+// Matches actual meta.json written by data-producer / cacheReader.ts
 interface ProducerMeta {
+  pid?: number;
+  version?: string;
   startedAt?: number;
-  lastTickAt?: number;
-  pairsConnected?: number;
-  tickCount?: number;
+  heartbeatAt?: number;
+  lastTickerUpdate?: number;
+  lastCandleUpdate?: number;
+  lastOrderbookUpdate?: number;
+  cycleCount?: number;
+  errorCount?: number;
+  shmRoot?: string;
 }
 
-// ── Pairs ─────────────────────────────────────────────────────────────────────
+// ── Pairs — must match WATCH_PAIRS in app/page.tsx ───────────────────────────
 
 const PAIRS = [
-  "BTC-USDT", "ETH-USDT", "SOL-USDT", "BNB-USDT", "DOGE-USDT",
-  "XRP-USDT", "ADA-USDT", "AVAX-USDT", "POL-USDT", "DOT-USDT",
-  "LINK-USDT", "UNI-USDT", "ATOM-USDT", "LTC-USDT", "BCH-USDT",
-  "NEAR-USDT", "FIL-USDT", "APT-USDT", "ARB-USDT", "OP-USDT",
+  "BTC-USDT","ETH-USDT","SOL-USDT","XRP-USDT","BNB-USDT",
+  "DOGE-USDT","ADA-USDT","AVAX-USDT","LINK-USDT","DOT-USDT",
+  "POL-USDT","UNI-USDT","LTC-USDT","ATOM-USDT","ARB-USDT",
+  "NEAR-USDT","APT-USDT","OP-USDT","TRX-USDT","INJ-USDT",
 ];
 
 // ── Route ─────────────────────────────────────────────────────────────────────
@@ -69,9 +76,7 @@ export async function GET() {
       timestamp: Date.now(),
     },
     {
-      headers: {
-        "Cache-Control": "no-store",
-      },
+      headers: { "Cache-Control": "no-store" },
     }
   );
 }

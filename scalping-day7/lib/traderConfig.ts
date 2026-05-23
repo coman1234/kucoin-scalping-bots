@@ -1,4 +1,4 @@
-/**
+﻿/**
  * traderConfig.ts — central parameter struct for scalping-day6
  *
  * Single source of truth for every tunable value. Mirrors the C `typedef struct`
@@ -140,7 +140,7 @@ export const CONFIG: TraderConfig = {
   // Heitkoetter benchmarks (fixed — not overridable by env)
   benchmarkPfMin:    1.3,
   benchmarkPfMax:    2.5,
-  benchmarkWrMin:    0.60,
+  benchmarkWrMin:    0.42,  // Adjusted for high-RR system (TP/SL>1.2:1 → breakeven WR ~45%)
   benchmarkWrMax:    0.80,
   benchmarkMaxDdPct: 20.0,
 

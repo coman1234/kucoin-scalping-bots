@@ -24,6 +24,9 @@ export interface IndicatorResult {
   plusDI: number[];
   minusDI: number[];
   regime: MarketRegime;
+  // OBV — On-Balance Volume (condition 8 display helper)
+  obv:   number[];
+  obvMA: number[];
 }
 
 export interface FibonacciLevels {
@@ -50,6 +53,25 @@ function simpleMA(values: number[], period: number): number[] {
     if (i >= period - 1) result.push(sum / period);
   }
   return result;
+}
+
+// ─── OBV (On-Balance Volume) ──────────────────────────────────────────────────
+export function calculateOBV(candles: KuCoinCandle[]): { obv: number[]; obvMA: number[] } {
+  const obv: number[] = [];
+  let cumObv = 0;
+  for (let i = 0; i < candles.length; i++) {
+    if (i === 0) { obv.push(0); continue; }
+    const delta = candles[i].close > candles[i - 1].close ?  candles[i].volume
+                : candles[i].close < candles[i - 1].close ? -candles[i].volume
+                : 0;
+    cumObv += delta;
+    obv.push(cumObv);
+  }
+  const obvMA = simpleMA(obv, 20);
+  // Pad obvMA to match obv length
+  const pad = obv.length - obvMA.length;
+  const obvMAPadded = [...new Array<number>(pad).fill(NaN), ...obvMA];
+  return { obv, obvMA: obvMAPadded };
 }
 
 // ─── VWAP ────────────────────────────────────────────────────────────────────
@@ -204,6 +226,7 @@ export function calculateIndicators(candles: KuCoinCandle[]): IndicatorResult {
   const adxResult = calculateADX(candles);
   const price     = closes[closes.length - 1] ?? 0;
   const regime    = detectMarketRegime(adxResult, atrRaw, price);
+  const obvResult = calculateOBV(candles);
 
   return {
     ema9, ema21, bb, rsi, macd, volumeMA, atr: atrRaw, fibonacci, gaussianChannel,
@@ -212,6 +235,8 @@ export function calculateIndicators(candles: KuCoinCandle[]): IndicatorResult {
     plusDI:  adxResult.plusDI,
     minusDI: adxResult.minusDI,
     regime,
+    obv:   obvResult.obv,
+    obvMA: obvResult.obvMA,
   };
 }
 
