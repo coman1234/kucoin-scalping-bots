@@ -49,34 +49,39 @@ export function reloadCredentials(): Promise<void> {
 reloadCredentials().catch(() => {});
 
 // ── Order mode flags ──────────────────────────────────────────────────────────
-/** True when the BOT6_DRY_RUN env var was set at startup. */
-export const DRY_RUN = process.env.BOT6_DRY_RUN === "true";
+/** True when the BOT7_DRY_RUN env var was set at startup. */
+export const DRY_RUN = process.env.BOT7_DRY_RUN === "true";
 
-/** Runtime simulation toggle (paper trading, UI-controlled). */
-let _simMode  = false;
-/** Runtime live override (explicit "Go Live" from UI, overrides DRY_RUN). */
-let _liveMode = false;
+/**
+ * Use globalThis so these flags survive Next.js App Router's per-route module
+ * isolation — each api route.ts file gets its own module bundle, so plain
+ * module-level `let` variables are NOT shared across routes.  By pinning to
+ * globalThis we guarantee a single source of truth across the process.
+ */
+const _gk = globalThis as unknown as {
+  __day7SimMode?:  boolean;
+  __day7LiveMode?: boolean;
+};
 
 export function setSimulationMode(v: boolean): void {
-  _simMode  = v;
-  if (v) _liveMode = false;
+  _gk.__day7SimMode = v;
+  if (v) _gk.__day7LiveMode = false;
   console.log(`[kucoinExec] SimMode=${v}`);
 }
 export function setLiveMode(v: boolean): void {
-  _liveMode = v;
-  if (v) _simMode = false;
+  _gk.__day7LiveMode = v;
+  if (v) _gk.__day7SimMode = false;
   console.log(`[kucoinExec] LiveMode=${v}`);
 }
 /** Returns true when orders should be simulated (not sent to exchange).
- *  Safe default: everything that isn't EXPLICITLY live is dry/sim.
- *  This prevents accidentally going live when simulation is stopped. */
+ *  Safe default: everything that isn't EXPLICITLY live is dry/sim. */
 export function isEffectiveDryRun(): boolean {
-  return !_liveMode;   // only explicit "Go Live" disables dry-run guard
+  return !(_gk.__day7LiveMode ?? false);
 }
 export function getCurrentMode(): "LIVE" | "SIM" | "DRY" {
-  if (_liveMode) return "LIVE";
-  if (_simMode)  return "SIM";
-  return "DRY";        // safe default — previously (incorrectly) returned "LIVE"
+  if (_gk.__day7LiveMode ?? false) return "LIVE";
+  if (_gk.__day7SimMode  ?? false) return "SIM";
+  return "DRY";
 }
 
 if (!_apiKey || !_apiSecret || !_apiPassph) {
@@ -209,7 +214,7 @@ function request<T>(
  * For limit  → supply both `price` and `size`
  */
 export async function placeOrder(params: OrderParams): Promise<PlaceOrderResult> {
-  const clientOid = params.clientOid ?? `bot6-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const clientOid = params.clientOid ?? `bot7-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const body: Record<string, unknown> = {
     clientOid,
     symbol: params.symbol,
@@ -307,7 +312,7 @@ export async function marketBuy(symbol: string, fundsUsdt: number, remark?: stri
   const res = await placeOrder({
     symbol, side: "buy", type: "market",
     funds:  fundsUsdt.toFixed(2),
-    remark: remark ?? "bot6-buy",
+    remark: remark ?? "bot7-buy",
   });
   return res.orderId;
 }
@@ -320,7 +325,7 @@ export async function marketSell(symbol: string, sizeBase: string, remark?: stri
   const res = await placeOrder({
     symbol, side: "sell", type: "market",
     size:   sizeBase,
-    remark: remark ?? "bot6-sell",
+    remark: remark ?? "bot7-sell",
   });
   return res.orderId;
 }
@@ -393,7 +398,7 @@ export async function safePlaceTpLimitOrder(
     symbol, side, type: "limit",
     size:   sizeBase,
     price,
-    remark: remark ?? "bot6-tp",
+    remark: remark ?? "bot7-tp",
   });
 }
 

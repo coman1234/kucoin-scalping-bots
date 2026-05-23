@@ -21,7 +21,7 @@
 
 import { nanoid }             from "nanoid";
 import type { BreakoutSignal, Position, RiskState, DashboardState, ProducerHealth, SimulationStats, ActivityEvent, WalletEntry, WalletState } from "./types";
-import { readCandleFile, readOrderBook, readTicker, isProducerAlive, producerLagMs, readMeta, getBot6Signal, readBot6Signals } from "./cacheReader";
+import { readCandleFile, readOrderBook, readTicker, isProducerAlive, producerLagMs, readMeta, getBot7Signal, readBot7Signals } from "./cacheReader";
 import { detectBreakout }     from "./breakoutDetector";
 import { getRiskManager, calcStopLoss, calcTP, calcBEThreshold } from "./riskManager";
 import {
@@ -40,8 +40,8 @@ const DEFAULT_PAIRS = [
   "LINK-USDT","UNI-USDT","ATOM-USDT","LTC-USDT","BCH-USDT",
   "NEAR-USDT","FIL-USDT","APT-USDT","ARB-USDT","OP-USDT",
 ];
-const WATCH_PAIRS: string[] = process.env.BOT6_PAIRS
-  ? process.env.BOT6_PAIRS.split(",").map(s => s.trim()).filter(Boolean)
+const WATCH_PAIRS: string[] = process.env.BOT7_PAIRS
+  ? process.env.BOT7_PAIRS.split(",").map(s => s.trim()).filter(Boolean)
   : DEFAULT_PAIRS;
 
 const LOOP_MS      = 10_000;  // 10-second main loop
@@ -208,24 +208,24 @@ export class DayTrader {
     const isBuy = sig.direction === "BUY";
 
     // ── Confluence filter (SHM cross-bot validation) ────────────────────────────
-    // If confluenceMinScore > 0, require bot6 to agree on direction AND score.
-    // bot6 writes /dev/shm/kucoin-data/signals/bot6.json every 30 s.
+    // If confluenceMinScore > 0, require bot7 to agree on direction AND score.
+    // bot7 writes /dev/shm/kucoin-data/signals/bot7.json every 30 s.
     // Score 0–13: 0 = disabled, 5 = moderate confirmation, 7 = strong confirmation.
     if (CONFIG.confluenceMinScore > 0) {
-      const bot6 = getBot6Signal(sig.symbol);
-      if (!bot6) {
-        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: bot6 signal not available (stale or missing)`);
+      const bot7 = getBot7Signal(sig.symbol);
+      if (!bot7) {
+        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: bot7 signal not available (stale or missing)`);
         return;
       }
-      if (bot6.direction !== sig.direction) {
-        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: direction conflict — day6=${sig.direction} bot6=${bot6.direction} (score ${bot6.score}/${bot6.maxScore})`);
+      if (bot7.direction !== sig.direction) {
+        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: direction conflict — day7=${sig.direction} bot7=${bot7.direction} (score ${bot7.score}/${bot7.maxScore})`);
         return;
       }
-      if (bot6.score < CONFIG.confluenceMinScore) {
-        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: bot6 score too low — ${bot6.score}/${bot6.maxScore} < required ${CONFIG.confluenceMinScore}`);
+      if (bot7.score < CONFIG.confluenceMinScore) {
+        console.log(`[dayTrader] Confluence SKIP ${sig.symbol}: bot7 score too low — ${bot7.score}/${bot7.maxScore} < required ${CONFIG.confluenceMinScore}`);
         return;
       }
-      console.log(`[dayTrader] Confluence OK ${sig.symbol}: bot6=${bot6.direction} ${bot6.score}/${bot6.maxScore} "${bot6.label}"`);
+      console.log(`[dayTrader] Confluence OK ${sig.symbol}: bot7=${bot7.direction} ${bot7.score}/${bot7.maxScore} "${bot7.label}"`);
     }
 
     // Pre-size with signal price (close approximation; recalculated after fill)
@@ -244,8 +244,8 @@ export class DayTrader {
     let orderId: string;
     try {
       orderId = isBuy
-        ? await safeMarketBuy(sig.symbol, sizeUsdt, `bot6-${sig.score}`)
-        : await safeMarketSell(sig.symbol, (sizeUsdt / sig.entryPrice).toFixed(6), `bot6-${sig.score}`);
+        ? await safeMarketBuy(sig.symbol, sizeUsdt, `bot7-${sig.score}`)
+        : await safeMarketSell(sig.symbol, (sizeUsdt / sig.entryPrice).toFixed(6), `bot7-${sig.score}`);
     } catch (e) {
       console.error(`[dayTrader] Entry order failed for ${sig.symbol}:`, e);
       return;
@@ -595,8 +595,8 @@ export class DayTrader {
       mode:          getCurrentMode(),
       simulation:    { ...this.sim },
       wallet:           { ...this.walletState },
-      bot6SignalsAgeMs: (() => {
-        const f = readBot6Signals();
+      bot7SignalsAgeMs: (() => {
+        const f = readBot7Signals();
         return f ? Date.now() - f.writtenAt : -1;
       })(),
     };
@@ -610,8 +610,10 @@ export class DayTrader {
 }
 
 // ── Singleton ──────────────────────────────────────────────────────────────────
-let _trader: DayTrader | null = null;
+// Use globalThis so Next.js App Router's per-route module isolation doesn't
+// create separate DayTrader instances for api/trading vs api/dashboard.
+const _gd = globalThis as unknown as { __day7Trader?: DayTrader };
 export function getDayTrader(): DayTrader {
-  if (!_trader) _trader = new DayTrader();
-  return _trader;
+  if (!_gd.__day7Trader) _gd.__day7Trader = new DayTrader();
+  return _gd.__day7Trader;
 }

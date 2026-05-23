@@ -83,7 +83,7 @@ export function producerLagMs(): number {
 // ── Bot6 confluence signals (written by scalping-bot6 signalBroadcaster) ─────
 const STALE_SIGNAL_MS = 120_000; // treat file stale after 2 minutes
 
-/** One entry per pair written by bot6's signalBroadcaster every 30 s. */
+/** One entry per pair written by bot6/bot7 signalBroadcaster every 30 s. */
 export interface BotSignalEntry {
   symbol:    string;
   direction: "BUY" | "SELL" | "NEUTRAL";
@@ -108,4 +108,16 @@ export function readBot6Signals(): BotSignalFile | null {
 /** Get bot6's signal for a single symbol.  Returns null if not found or file stale. */
 export function getBot6Signal(symbol: string): BotSignalEntry | null {
   return readBot6Signals()?.signals.find(s => s.symbol === symbol) ?? null;
+}
+
+/** Read the full bot7 signal cache.  Returns null if missing or stale (>2 min). */
+export function readBot7Signals(): BotSignalFile | null {
+  const f = readJson<BotSignalFile>(path.join(SHM_ROOT, "signals", "bot7.json"));
+  if (!f || Date.now() - f.writtenAt > STALE_SIGNAL_MS) return null;
+  return f;
+}
+
+/** Get bot7's signal for a single symbol.  Returns null if not found or file stale. */
+export function getBot7Signal(symbol: string): BotSignalEntry | null {
+  return readBot7Signals()?.signals.find(s => s.symbol === symbol) ?? null;
 }

@@ -271,16 +271,16 @@ function Pill({ label, ok, warn }: { label: string; ok?: boolean; warn?: boolean
 }
 
 // ── Producer health panel ──────────────────────────────────────────────────────
-function ProducerPanel({ h, bot6AgeMs, confluenceMin }: {
+function ProducerPanel({ h, bot7AgeMs, confluenceMin }: {
   h: ProducerHealth;
-  bot6AgeMs: number;
+  bot7AgeMs: number;
   confluenceMin: number;
 }) {
-  const confluenceOk   = bot6AgeMs >= 0 && bot6AgeMs < 120_000;
-  const confluenceWarn = bot6AgeMs >= 0 && bot6AgeMs >= 120_000;
-  const confluenceAge  = bot6AgeMs >= 0
-    ? bot6AgeMs < 60_000 ? `${Math.round(bot6AgeMs / 1000)}s ago`
-    : `${Math.round(bot6AgeMs / 60_000)}m ago`
+  const confluenceOk   = bot7AgeMs >= 0 && bot7AgeMs < 120_000;
+  const confluenceWarn = bot7AgeMs >= 0 && bot7AgeMs >= 120_000;
+  const confluenceAge  = bot7AgeMs >= 0
+    ? bot7AgeMs < 60_000 ? `${Math.round(bot7AgeMs / 1000)}s ago`
+    : `${Math.round(bot7AgeMs / 60_000)}m ago`
     : "–";
 
   return (
@@ -302,17 +302,17 @@ function ProducerPanel({ h, bot6AgeMs, confluenceMin }: {
         )}
         {h.shmRoot && <span className="text-[11px] text-tv-text3 truncate max-w-xs">{h.shmRoot}</span>}
       </div>
-      {/* Bot6 confluence status */}
+      {/* Bot7 confluence status */}
       <div className="flex items-center gap-3 mt-2 pt-2 border-t border-tv-border">
-        <span className="text-[11px] text-tv-text3 uppercase tracking-wide font-semibold">Bot6 confluence</span>
+        <span className="text-[11px] text-tv-text3 uppercase tracking-wide font-semibold">Bot7 confluence</span>
         <Pill
-          label={bot6AgeMs < 0 ? "NO DATA" : confluenceOk ? `OK · ${confluenceAge}` : `STALE · ${confluenceAge}`}
+          label={bot7AgeMs < 0 ? "NO DATA" : confluenceOk ? `OK · ${confluenceAge}` : `STALE · ${confluenceAge}`}
           ok={confluenceOk}
           warn={confluenceWarn}
         />
         <span className="text-[11px] text-tv-text3">
           {confluenceMin === 0
-            ? "disabled (0 = off)"
+            ? "off — set in Settings → Parametrit → Bot7 confluence"
             : `min score ${confluenceMin}/13 required`}
         </span>
       </div>
@@ -662,7 +662,7 @@ function SettingsModal({ config, onClose, onSave, busy }: {
     { key: "maxOpenPositions", label: "Max open positions", min: 1,   max: 10,   step: 1    },
     { key: "maxNotionalPct",      label: "Max notional %",        min: 5,   max: 50,  step: 1  },
     { key: "minTradeUsdt",        label: "Min trade USDT",        min: 5,   max: 100, step: 1  },
-    { key: "confluenceMinScore",  label: "Confluence min score (0=off)", min: 0, max: 13, step: 1 },
+    { key: "confluenceMinScore",  label: "Bot7 confluence min score (0=off)", min: 0, max: 13, step: 1 },
   ];
 
   const inputCls = "border border-tv-border rounded px-2.5 py-1.5 text-[13px] font-mono bg-tv-bg2 focus:outline-none focus:border-tv-blue focus:ring-1 focus:ring-tv-blue/20 text-tv-text w-full";
@@ -1165,7 +1165,7 @@ export default function DayTraderPage() {
         {/* Row 1: producer + risk side by side */}
         {data && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <ProducerPanel h={data.producerHealth} bot6AgeMs={data.bot6SignalsAgeMs ?? -1} confluenceMin={config?.confluenceMinScore ?? 0} />
+            <ProducerPanel h={data.producerHealth} bot7AgeMs={data.bot7SignalsAgeMs ?? -1} confluenceMin={config?.confluenceMinScore ?? 0} />
             <RiskPanel
               r={data.riskState} busy={busy}
               onKill={() => !busy && void postAction("kill")}

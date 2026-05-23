@@ -137,5 +137,5 @@ export interface DashboardState {
   mode:            TradingMode;       // LIVE | SIM | DRY
   simulation:      SimulationStats;
   wallet:          WalletState;       // portfolio / wallet snapshot
-  bot6SignalsAgeMs: number;           // ms since bot6 SHM signals were written; -1 = not available
+  bot7SignalsAgeMs: number;           // ms since bot7 SHM signals were written; -1 = not available
 }

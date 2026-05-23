@@ -1,5 +1,5 @@
 ﻿/**
- * traderConfig.ts — central parameter struct for scalping-day6
+ * traderConfig.ts — central parameter struct for scalping-day7
  *
  * Single source of truth for every tunable value. Mirrors the C `typedef struct`
  * requested in the Heitkoetter spec. All values are read from environment
@@ -77,8 +77,8 @@ export interface TraderConfig {
   oosSplitRatio:     number;  // fraction used for in-sample (default 0.6)
 
   // ── Confluence filter (SHM cross-bot signal validation) ──────────────────────
-  // When > 0: day6 checks /dev/shm/kucoin-data/signals/bot6.json before entering.
-  // Requires bot6 signal score ≥ confluenceMinScore AND same direction.
+  // When > 0: day7 checks /dev/shm/kucoin-data/signals/bot7.json before entering.
+  // Requires bot7 signal score ≥ confluenceMinScore AND same direction.
   // Set to 0 to disable (default — independent operation).
   confluenceMinScore: number;
 }
@@ -106,36 +106,36 @@ export function getConfigSnapshot(): TraderConfig { return { ...CONFIG }; }
 
 export const CONFIG: TraderConfig = {
   // Signal
-  signalTimeframe:   envStr("BOT6_TF",           "5min"),
-  minScore:          env  ("BOT6_MIN_SCORE",      2),      // 2 of 3 scored conditions
-  maxSpreadPct:      env  ("BOT6_MAX_SPREAD",     0.3),
+  signalTimeframe:   envStr("BOT7_TF",           "5min"),
+  minScore:          env  ("BOT7_MIN_SCORE",      2),      // 2 of 3 scored conditions
+  maxSpreadPct:      env  ("BOT7_MAX_SPREAD",     0.3),
 
   // Trend gate
-  emaTrendFast:      env  ("BOT6_EMA_FAST",       9),
-  emaTrendSlow:      env  ("BOT6_EMA_SLOW",       21),
+  emaTrendFast:      env  ("BOT7_EMA_FAST",       9),
+  emaTrendSlow:      env  ("BOT7_EMA_SLOW",       21),
 
   // RSI
-  rsiBullLo:         env  ("BOT6_RSI_BULL_LO",    55),
-  rsiBullHi:         env  ("BOT6_RSI_BULL_HI",    80),
-  rsiBearLo:         env  ("BOT6_RSI_BEAR_LO",    20),
-  rsiBearHi:         env  ("BOT6_RSI_BEAR_HI",    45),
+  rsiBullLo:         env  ("BOT7_RSI_BULL_LO",    55),
+  rsiBullHi:         env  ("BOT7_RSI_BULL_HI",    80),
+  rsiBearLo:         env  ("BOT7_RSI_BEAR_LO",    20),
+  rsiBearHi:         env  ("BOT7_RSI_BEAR_HI",    45),
 
   // Exits
-  slAtrMult:         env  ("BOT6_SL_ATR",         1.5),
-  tpAtrMult:         env  ("BOT6_TP_ATR",         2.0),
-  beBroughtAt:       env  ("BOT6_BE_ATR",         1.0),    // break-even at 1×ATR in profit
-  maxHoldMinutes:    env  ("BOT6_MAX_HOLD_MIN",   60),
+  slAtrMult:         env  ("BOT7_SL_ATR",         1.5),
+  tpAtrMult:         env  ("BOT7_TP_ATR",         2.0),
+  beBroughtAt:       env  ("BOT7_BE_ATR",         1.0),    // break-even at 1×ATR in profit
+  maxHoldMinutes:    env  ("BOT7_MAX_HOLD_MIN",   60),
 
   // Fees
-  feeRatePct:        env  ("BOT6_FEE_RATE",        0.1),   // KuCoin taker 0.1%
+  feeRatePct:        env  ("BOT7_FEE_RATE",        0.1),   // KuCoin taker 0.1%
 
   // Risk
-  riskPctPerTrade:   env  ("BOT6_RISK_PCT",       1.0),
-  dailyDrawdownPct:  env  ("BOT6_DD_LIMIT",       5.0),
-  maxTradesPerDay:   env  ("BOT6_MAX_TRADES",     10),
-  maxOpenPositions:  env  ("BOT6_MAX_POS",        3),
-  maxNotionalPct:    env  ("BOT6_MAX_NOTL",       20.0),
-  minTradeUsdt:      env  ("BOT6_MIN_TRADE",      10.0),
+  riskPctPerTrade:   env  ("BOT7_RISK_PCT",       1.0),
+  dailyDrawdownPct:  env  ("BOT7_DD_LIMIT",       5.0),
+  maxTradesPerDay:   env  ("BOT7_MAX_TRADES",     10),
+  maxOpenPositions:  env  ("BOT7_MAX_POS",        3),
+  maxNotionalPct:    env  ("BOT7_MAX_NOTL",       20.0),
+  minTradeUsdt:      env  ("BOT7_MIN_TRADE",      10.0),
 
   // Heitkoetter benchmarks (fixed — not overridable by env)
   benchmarkPfMin:    1.3,
@@ -149,6 +149,6 @@ export const CONFIG: TraderConfig = {
   oosSplitRatio:     0.6,
 
   // Confluence filter — 0 = disabled (independent mode)
-  // Enable by setting to e.g. 5 (= require bot6 score ≥ 5/13 in same direction)
-  confluenceMinScore: env("BOT6_CONFLUENCE_MIN", 0),
+  // Enable by setting to e.g. 5 (= require bot7 score ≥ 5/13 in same direction)
+  confluenceMinScore: env("BOT7_CONFLUENCE_MIN", 0),
 };
