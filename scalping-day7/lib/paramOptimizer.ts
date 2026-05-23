@@ -14,6 +14,16 @@ import { detectBreakout }   from "./breakoutDetector";
 import { CONFIG, type TraderConfig, updateConfig } from "./traderConfig";
 import { getCandlesForPair }                       from "./historicalDataStore";
 
+// ── Disk persistence ───────────────────────────────────────────────────────
+const STATE_FILE = path.join(process.cwd(), "data", "optimizer-state.json");
+
+function _flushState(): void {
+  try {
+    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    fs.writeFileSync(STATE_FILE, JSON.stringify(_state), "utf8");
+  } catch { /* non-critical */ }
+}
+
 // ── Optimisation pairs & timeframe ─────────────────────────────────────────
 export const OPT_PAIRS = [
   "BTC-USDT","ETH-USDT","SOL-USDT","ADA-USDT","AVAX-USDT",
@@ -67,6 +77,15 @@ let _state: OptimizerState = {
 };
 
 export function getOptimizerState(): OptimizerState {
+  // If optimizer is running in this process, return live state
+  if (_state.running) return { ..._state };
+  // Otherwise, try to read persisted state from disk (survives worker restarts)
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const disk = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) as OptimizerState;
+      return disk;
+    }
+  } catch { /* fall through */ }
   return { ..._state };
 }
 
@@ -256,7 +275,8 @@ async function _run(): Promise<void> {
       const top = [...allResults].sort((a, b) => b.score - a.score).slice(0, 5);
       _state.results = top;
       if (top.length > 0) _state.bestParams = top[0].params;
-      await new Promise(r => setTimeout(r, 0));  // yield to event loop
+      _flushState();
+      await new Promise(r => setTimeout(r, 0));
     }
   }
 
@@ -269,6 +289,7 @@ async function _run(): Promise<void> {
   _state.phase     = `Complete — ${passing}/${allResults.length} combos passed Heitkoetter benchmarks`;
   _state.running   = false;
   _state.finishedAt = Date.now();
+  _flushState();
 
   console.log(`[paramOptimizer] ${_state.phase}`);
   if (_state.bestParams) {

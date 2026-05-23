@@ -29,7 +29,9 @@ function _load(symbol: string, tf: string): void {
   try {
     const raw  = fs.readFileSync(filePath(symbol, tf), "utf8");
     const data = JSON.parse(raw) as StoredFile;
-    _cache.set(key, (data.candles ?? []).slice().sort((a, b) => a.time - b.time));
+    const sorted = (data.candles ?? []).slice().sort((a, b) => a.time - b.time);
+    const MAX_CACHED = 25_920;  // ~90 days of 5min candles
+    _cache.set(key, sorted.length > MAX_CACHED ? sorted.slice(sorted.length - MAX_CACHED) : sorted);
   } catch {
     _cache.set(key, []);
   }
