@@ -80,9 +80,10 @@ export function startOptimization(): void {
   // Use setImmediate so the HTTP response is sent before sync FS reads begin
   setImmediate(() => {
     void _run().catch(e => {
+      console.error("[paramOptimizer] FATAL ERROR:", e);
       _state.error     = String(e);
       _state.running   = false;
-      _state.phase     = "Error: " + String(e).slice(0, 80);
+      _state.phase     = "Error: " + String(e).slice(0, 200);
       _state.finishedAt = Date.now();
     });
   });
