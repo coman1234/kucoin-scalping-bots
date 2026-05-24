@@ -36,16 +36,17 @@ export const OPT_PAIRS = [
   "BTC-USDT", "ETH-USDT", "SOL-USDT", "ADA-USDT", "AVAX-USDT",
 ];
 export const OPT_TF    = "5min";
-const HISTORY_DAYS     = 90;                              // 90 d ≈ 25,920 candles
+const HISTORY_DAYS     = 730;                             // 730 d = 2 years ≈ 210,240 candles
 const CANDLES_PER_PAIR = Math.ceil(HISTORY_DAYS * 24 * 12);
 const MIN_CANDLES      = 500;
 const OOS_SPLIT        = 0.6;   // 60 % IS / 40 % OOS
 
 // ── Parameter grid ─────────────────────────────────────────────────────────
+// 4 × 4 × 2 × 2 × 2 × 2 × 2 = 512 combos (after TP > SL filter: ~384)
 const GRID = {
   slAtrMult: [0.75, 1.0, 1.25, 1.5],
   tpAtrMult: [1.0,  1.5, 2.0,  2.5],
-  minScore:  [1, 2, 3],
+  minScore:  [2, 3],          // 1 removed — too noisy
   rsiBullLo: [45, 50],
   rsiBullHi: [68, 72],
   rsiBearLo: [28, 32],

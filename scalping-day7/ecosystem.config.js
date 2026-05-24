@@ -13,14 +13,14 @@ module.exports = {
       PORT: "3002",
       KUCOIN_HISTORY_DIR: "/usr/local/bin/scalping-bot6/data/history",
 
-      // ── Signal engine (optimised 2025-05-24 via paramOptimizer — 90d history) ──
-      // Best passing combo: OOS PF=1.33, OOS WR=49.6%, degradation=11.3%
-      BOT7_MIN_SCORE: "3",        // was 2 — all 8 passing combos require 3/3 conditions
-      BOT7_SL_ATR:    "1.25",     // was 1.5 — tighter stop
-      BOT7_TP_ATR:    "1.5",      // was 2.0 — closer TP → faster exits, higher WR
+      // ── Signal engine (optimised 2026-05-24 via paramOptimizer — 730d/2y history) ──
+      // Best passing combo: OOS PF=1.36, WR=50.4%, 44/384 combos passed
+      BOT7_MIN_SCORE: "3",        // was 2 — all passing combos require 3/3 conditions
+      BOT7_SL_ATR:    "1.5",      // confirmed — 2y run agrees with original default
+      BOT7_TP_ATR:    "2.0",      // confirmed — 2y run agrees with original default
       BOT7_RSI_BULL_LO: "45",     // was 55 — wider lower bound captures more momentum
-      BOT7_RSI_BULL_HI: "72",     // was 80 — avoid overbought entries
-      BOT7_RSI_BEAR_LO: "28",     // was 20 — avoid oversold entries
+      BOT7_RSI_BULL_HI: "68",     // was 80 — avoid overbought (2y optimal: 68)
+      BOT7_RSI_BEAR_LO: "32",     // was 20 — avoid oversold (2y optimal: 32)
       BOT7_RSI_BEAR_HI: "45",     // unchanged
 
       // ── Risk ──────────────────────────────────────────────────────────────────
