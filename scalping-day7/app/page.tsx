@@ -412,11 +412,22 @@ function OpenPositions({ positions }: { positions: Position[] }) {
 }
 
 // ── Active signals ─────────────────────────────────────────────────────────────
-function ActiveSignals({ signals }: { signals: BreakoutSignal[] }) {
+function ActiveSignals({ signals, blocked }: { signals: BreakoutSignal[]; blocked: number }) {
+  const title = signals.length > 0
+    ? `Active Signals (${signals.length})`
+    : blocked > 0
+      ? `Active Signals (0 — ${blocked} blocked)`
+      : "Active Signals (0)";
   return (
-    <Card title={`Active Signals (${signals.length})`}>
+    <Card title={title}>
       {signals.length === 0
-        ? <div className="text-tv-text3 text-[12px] italic py-2">No signals above threshold</div>
+        ? (
+          <div className="text-tv-text3 text-[12px] italic py-2">
+            {blocked > 0
+              ? `${blocked} breakout${blocked > 1 ? "s" : ""} detected but filtered by score gate (RSI overbought / low volume) — waiting for better setup`
+              : "No breakout patterns detected — market inside Bollinger Bands"}
+          </div>
+        )
         : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {signals.slice(0, 10).map((s, i) => <SignalCard key={i} s={s} />)}
@@ -1183,7 +1194,7 @@ export default function DayTraderPage() {
         {/* Row 4: signals + open positions */}
         {data && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
-            <ActiveSignals signals={data.activeSignals} />
+            <ActiveSignals signals={data.activeSignals} blocked={data.blockedSignals ?? 0} />
             <OpenPositions positions={data.openPositions} />
           </div>
         )}

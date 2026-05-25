@@ -132,6 +132,7 @@ export interface DashboardState {
   recentTrades:    Position[];        // last 50 closed
   activityLog:     ActivityEvent[];   // last 100 events (entries + exits)
   activeSignals:   BreakoutSignal[];
+  blockedSignals:  number;           // pass G1+G2+G3 gates but fail minScore threshold
   timestamp:       number;
   tradingActive:   boolean;           // is the main loop running?
   mode:            TradingMode;       // LIVE | SIM | DRY

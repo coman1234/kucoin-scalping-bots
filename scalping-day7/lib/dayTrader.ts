@@ -54,6 +54,7 @@ export class DayTrader {
   private recentTrades:    Position[]            = [];
   private activityLog:     ActivityEvent[]       = [];
   private activeSignals:   BreakoutSignal[]      = [];
+  private candidateSignals: BreakoutSignal[]     = []; // pass G1+G2+G3 but fail minScore
   private running          = false;
   private loopTimer:       NodeJS.Timeout | null = null;
   private lastEquityUpdate = 0;
@@ -170,16 +171,22 @@ export class DayTrader {
     }
 
     // ── 3. Scan all pairs for breakout signals ──────────────────────────────────
-    const signals: BreakoutSignal[] = [];
+    const signals:    BreakoutSignal[] = [];
+    const candidates: BreakoutSignal[] = [];
     for (const symbol of WATCH_PAIRS) {
       const cf   = readCandleFile(symbol, CONFIG.signalTimeframe);
       const book = readOrderBook(symbol);
       if (!cf || cf.candles.length < 60) continue;
+      // Normal scan (applies minScore filter)
       const sig = detectBreakout(symbol, CONFIG.signalTimeframe, cf.candles, book);
-      if (sig) signals.push(sig);
+      if (sig) { signals.push(sig); continue; }
+      // Pre-filter scan: passes G1+G2+G3 but fails minScore — shown as "waiting"
+      const raw = detectBreakout(symbol, CONFIG.signalTimeframe, cf.candles, book, true);
+      if (raw) candidates.push(raw);
     }
     signals.sort((a, b) => b.score - a.score);
-    this.activeSignals = signals;
+    this.activeSignals    = signals;
+    this.candidateSignals = candidates;
 
     // ── 4. Enter new positions (one per symbol, skip duplicates) ─────────────────
     const openSymbols = new Set([...this.openPositions.values()].map(p => p.symbol));
@@ -589,8 +596,9 @@ export class DayTrader {
       openPositions: [...this.openPositions.values()],
       recentTrades:  this.recentTrades,
       activityLog:   this.activityLog,
-      activeSignals: this.activeSignals,
-      timestamp:     Date.now(),
+      activeSignals:  this.activeSignals,
+      blockedSignals: this.candidateSignals.length,
+      timestamp:      Date.now(),
       tradingActive: this.running,
       mode:          getCurrentMode(),
       simulation:    { ...this.sim },

@@ -40,10 +40,11 @@ import { CONFIG }             from "./traderConfig";
  * Returns BreakoutSignal or null if any mandatory gate fails or score < minScore.
  */
 export function detectBreakout(
-  symbol:    string,
-  timeframe: string,
-  candles:   CacheCandle[],
-  book:      OrderBookFile | null,
+  symbol:          string,
+  timeframe:       string,
+  candles:         CacheCandle[],
+  book:            OrderBookFile | null,
+  ignoreMinScore = false,
 ): BreakoutSignal | null {
   if (candles.length < 60) return null;
 
@@ -131,7 +132,7 @@ export function detectBreakout(
   }
 
   // ── Minimum score gate ────────────────────────────────────────────────────────
-  if (score < CONFIG.minScore) return null;
+  if (!ignoreMinScore && score < CONFIG.minScore) return null;
 
   return {
     symbol,

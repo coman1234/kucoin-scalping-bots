@@ -4,6 +4,7 @@ module.exports = {
     script: "node_modules/.bin/next",
     args: "start -p 3002",
     cwd: "/usr/local/bin/scalping-day7",
+    interpreter: "/root/.nvm/versions/node/v24.15.0/bin/node",  // explicit NVM node — avoids system Node v12
     exec_mode: "fork",
     instances: 1,
     autorestart: true,
@@ -15,7 +16,7 @@ module.exports = {
 
       // ── Signal engine (optimised 2026-05-24 via paramOptimizer — 730d/2y history) ──
       // Best passing combo: OOS PF=1.36, WR=50.4%, 44/384 combos passed
-      BOT7_MIN_SCORE: "3",        // was 2 — all passing combos require 3/3 conditions
+      BOT7_MIN_SCORE: "2",        // 2/3 conditions required — minScore=3 causes zero trades in sideways markets
       BOT7_SL_ATR:    "1.5",      // confirmed — 2y run agrees with original default
       BOT7_TP_ATR:    "2.0",      // confirmed — 2y run agrees with original default
       BOT7_RSI_BULL_LO: "45",     // was 55 — wider lower bound captures more momentum
