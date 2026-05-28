@@ -105,6 +105,10 @@ export class DayTrader {
       startEquity,
       startedAt:   Date.now(),
     };
+    // Reset RiskManager to a clean slate — prevents stale live-session counters
+    // (totalTradesDay, circuitBreaker, old dailyStartEquity) from blocking sim trades.
+    getRiskManager().resetForSimulation(startEquity);
+    this.lastEquityUpdate = 0; // force equity refresh on next tick
     console.log(`[dayTrader] Simulation started. startEquity=$${startEquity}`);
     if (!this.running) this.start();
   }
@@ -144,18 +148,32 @@ export class DayTrader {
 
     // ── 1. Equity refresh (every 60s to avoid hammering the API) ───────────────
     if (now - this.lastEquityUpdate > 60_000) {
-      try {
-        const { getUsdtBalance } = await import("./kucoinExec");
-        const equity = await getUsdtBalance();
-        rm.updateEquity(equity);
-        rm.maybeDayRoll(equity);
+      // SIM mode: use virtual equity (startEquity + accumulated PnL) for sizing.
+      // This prevents the real KuCoin balance (~$499) from capping position sizes
+      // when the sim was started with a different equity (e.g. $1000).
+      if (this.sim.active) {
+        const virtualEquity = Math.max(
+          this.sim.startEquity + this.sim.pnlUsdt,
+          CONFIG.minTradeUsdt * 2
+        );
+        rm.updateEquity(virtualEquity);
+        rm.maybeDayRoll(virtualEquity);
         this.lastEquityUpdate = now;
-      } catch (e) {
-        console.warn("[dayTrader] equity fetch failed:", e);
-      }
-      // Live wallet: refresh from KuCoin every 60s alongside equity
-      if (!isEffectiveDryRun()) {
-        await this.updateLiveWallet();
+        console.log(`[dayTrader] SIM equity: $${virtualEquity.toFixed(2)} (start=$${this.sim.startEquity} pnl=$${this.sim.pnlUsdt.toFixed(2)})`);
+      } else {
+        try {
+          const { getUsdtBalance } = await import("./kucoinExec");
+          const equity = await getUsdtBalance();
+          rm.updateEquity(equity);
+          rm.maybeDayRoll(equity);
+          this.lastEquityUpdate = now;
+        } catch (e) {
+          console.warn("[dayTrader] equity fetch failed:", e);
+        }
+        // Live wallet: refresh from KuCoin every 60s alongside equity
+        if (!isEffectiveDryRun()) {
+          await this.updateLiveWallet();
+        }
       }
     }
 

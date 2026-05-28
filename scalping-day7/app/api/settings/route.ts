@@ -9,7 +9,7 @@ import type { TraderConfig } from "@/lib/traderConfig";
 export const dynamic = "force-dynamic";
 
 const ALLOWED_KEYS: (keyof TraderConfig)[] = [
-  "feeRatePct", "minScore", "maxSpreadPct", "emaTrendFast", "emaTrendSlow",
+  "feeRatePct", "minScore", "maxSpreadPct", "minAtrPct", "emaTrendFast", "emaTrendSlow",
   "rsiBullLo", "rsiBullHi", "rsiBearLo", "rsiBearHi",
   "slAtrMult", "tpAtrMult", "beBroughtAt", "maxHoldMinutes",
   "riskPctPerTrade", "dailyDrawdownPct", "maxTradesPerDay",

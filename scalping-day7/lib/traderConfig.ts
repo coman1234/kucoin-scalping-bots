@@ -31,6 +31,8 @@ export interface TraderConfig {
   signalTimeframe:   string;  // candle resolution for breakout scan
   minScore:          number;  // min of 3 scored conditions to emit a signal
   maxSpreadPct:      number;  // reject illiquid markets above this bid-ask spread %
+  minAtrPct:         number;  // min ATR as % of price (e.g. 0.5 = 0.5%). Below this the
+                              // TP target is too small to overcome round-trip fees.
 
   // Trend gate — sole trend indicator (Heitkoetter Mistake #1: ≤2 trend indicators)
   emaTrendFast:      number;  // fast EMA period (default 9)
@@ -109,6 +111,7 @@ export const CONFIG: TraderConfig = {
   signalTimeframe:   envStr("BOT7_TF",           "5min"),
   minScore:          env  ("BOT7_MIN_SCORE",      2),      // 2 of 3 scored conditions
   maxSpreadPct:      env  ("BOT7_MAX_SPREAD",     0.3),
+  minAtrPct:         env  ("BOT7_MIN_ATR_PCT",    0.5),    // 0.5% min ATR — filters low-vol setups
 
   // Trend gate
   emaTrendFast:      env  ("BOT7_EMA_FAST",       9),

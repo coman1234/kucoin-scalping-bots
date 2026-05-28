@@ -32,6 +32,13 @@ export async function POST(req: NextRequest) {
       case "stop_sim":
         trader.stopSimulation();
         return NextResponse.json({ ok: true, message: "Simulation stopped" });
+      case "restart_sim": {
+        // stop + start with fresh counters (resets stale totalTradesDay etc.)
+        trader.stopSimulation();
+        const equity2 = typeof body.startEquity === "number" ? body.startEquity : 1000;
+        trader.startSimulation(equity2);
+        return NextResponse.json({ ok: true, message: `Simulation restarted with $${equity2} virtual equity — risk counters reset` });
+      }
       case "start_live":
         trader.startLiveTrading();
         return NextResponse.json({ ok: true, message: "LIVE trading activated — real orders will be sent to KuCoin" });

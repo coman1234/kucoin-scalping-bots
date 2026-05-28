@@ -236,6 +236,30 @@ export class RiskManager {
     this.persist();
   }
 
+  // ── Simulation reset ────────────────────────────────────────────────────────
+  /**
+   * Hard-reset all daily counters to a clean slate for a new simulation.
+   * Called by DayTrader.startSimulation() so stale live-session state
+   * (old totalTradesDay, circuitBreaker, etc.) does not bleed into the sim.
+   */
+  resetForSimulation(equity: number): void {
+    console.log(`[riskManager] Resetting daily state for new simulation. equity=$${equity}`);
+    this._dayKey = todayUtcDate();
+    this.state.accountEquity        = equity;
+    this.state.dailyStartEquity     = equity;
+    this.state.dailyPnlUsdt         = 0;
+    this.state.dailyPnlPct          = 0;
+    this.state.circuitBreakerActive = false;
+    this.state.killSwitchActive     = false;
+    this.state.totalTradesDay       = 0;
+    this.state.winsDay              = 0;
+    this.state.lossesDay            = 0;
+    this.state.maxDrawdownPct       = 0;
+    this.state.openPositions        = 0;
+    this.state.lastUpdated          = Date.now();
+    this.persist();
+  }
+
   // ── Equity update ───────────────────────────────────────────────────────────
   updateEquity(equity: number): void {
     this.state.accountEquity = equity;

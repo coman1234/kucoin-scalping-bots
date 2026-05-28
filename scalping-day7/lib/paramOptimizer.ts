@@ -42,15 +42,17 @@ const MIN_CANDLES      = 500;
 const OOS_SPLIT        = 0.6;   // 60 % IS / 40 % OOS
 
 // ── Parameter grid ─────────────────────────────────────────────────────────
-// 4 × 4 × 2 × 2 × 2 × 2 × 2 = 512 combos (after TP > SL filter: ~384)
+// 3 × 4 × 2 × 2 × 2 × 2 × 2 × 3 = 1152 combos (after TP > SL filter: ~768)
+// minAtrPct added — fee analysis shows ATR < 0.3% produces net-negative trades
 const GRID = {
-  slAtrMult: [0.75, 1.0, 1.25, 1.5],
-  tpAtrMult: [1.0,  1.5, 2.0,  2.5],
-  minScore:  [2, 3],          // 1 removed — too noisy
+  slAtrMult: [1.0, 1.25, 1.5],
+  tpAtrMult: [1.5, 2.0,  2.5, 3.0],   // 3.0 added — covers the fee-adjusted breakeven
+  minScore:  [2, 3],
   rsiBullLo: [45, 50],
   rsiBullHi: [68, 72],
   rsiBearLo: [28, 32],
   rsiBearHi: [45, 50],
+  minAtrPct: [0, 0.3, 0.5],            // 0=off, 0.3%, 0.5% — quality filter
 };
 
 // ── Result types ────────────────────────────────────────────────────────────
@@ -207,13 +209,14 @@ function _evalCombo(
   maxCandles:  number,
 ): { oosPF: number; oosWR: number; isPF: number; isWR: number; trades: number } {
 
-  const slMult  = (combo.slAtrMult  as number) ?? 1.0;
-  const tpMult  = (combo.tpAtrMult  as number) ?? 1.5;
-  const minSc   = (combo.minScore   as number) ?? 2;
-  const rblLo   = (combo.rsiBullLo  as number) ?? 50;
-  const rblHi   = (combo.rsiBullHi  as number) ?? 70;
-  const rbrLo   = (combo.rsiBearLo  as number) ?? 30;
-  const rbrHi   = (combo.rsiBearHi  as number) ?? 50;
+  const slMult    = (combo.slAtrMult  as number) ?? 1.0;
+  const tpMult    = (combo.tpAtrMult  as number) ?? 1.5;
+  const minSc     = (combo.minScore   as number) ?? 2;
+  const rblLo     = (combo.rsiBullLo  as number) ?? 50;
+  const rblHi     = (combo.rsiBullHi  as number) ?? 70;
+  const rbrLo     = (combo.rsiBearLo  as number) ?? 30;
+  const rbrHi     = (combo.rsiBearHi  as number) ?? 50;
+  const minAtrPct = (combo.minAtrPct  as number) ?? 0;
 
   const isTrades:  number[] = [];
   const oosTrades: number[] = [];
@@ -221,6 +224,9 @@ function _evalCombo(
 
   for (const f of features) {
     if (f.i < skipUntil) continue;
+
+    // G4: minAtrPct gate — skip setups where ATR is too small to overcome fees
+    if (minAtrPct > 0 && (f.atr / f.close) * 100 < minAtrPct) continue;
 
     // C2: RSI momentum window — thresholds vary per combo
     const c2 = f.dir === "BUY"
@@ -322,11 +328,14 @@ async function _run(): Promise<void> {
             for (const rrl of GRID.rsiBearLo) {
               for (const rrh of GRID.rsiBearHi) {
                 if (rrh <= rrl) continue;
-                combos.push({
-                  slAtrMult: sl, tpAtrMult: tp, minScore: ms,
-                  rsiBullLo: rbl, rsiBullHi: rbh,
-                  rsiBearLo: rrl, rsiBearHi: rrh,
-                });
+                for (const atrPct of GRID.minAtrPct) {
+                  combos.push({
+                    slAtrMult: sl, tpAtrMult: tp, minScore: ms,
+                    rsiBullLo: rbl, rsiBullHi: rbh,
+                    rsiBearLo: rrl, rsiBearHi: rrh,
+                    minAtrPct: atrPct,
+                  });
+                }
               }
             }
           }

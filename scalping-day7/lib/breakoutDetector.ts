@@ -76,6 +76,16 @@ export function detectBreakout(
   if (ob && ob.spreadPct > CONFIG.maxSpreadPct) return null;
   const imbalance = ob?.imbalance ?? 0;
 
+  // ── G4: Minimum ATR% gate ─────────────────────────────────────────────────────
+  // Reject setups where the ATR is too small relative to price.
+  // When ATR% < minAtrPct, the TP target is too small to exceed round-trip fees
+  // (KuCoin 0.1% per order = 0.2% round-trip). Breakeven ATR% with TP=2×, SL=1.5×:
+  //   0.134 × ATR_pct > fee → ATR_pct > 1.49% for tpMult=2.0
+  // Even tpMult=2.5: ATR_pct > 0.33% for the trade to be profitable.
+  // Default minAtrPct = 0.5% (env: BOT7_MIN_ATR_PCT).
+  const atrPct = (atrVal / close) * 100;
+  if (CONFIG.minAtrPct > 0 && atrPct < CONFIG.minAtrPct) return null;
+
   // ── G2: BB breakout gate ─────────────────────────────────────────────────────
   const buyBreakout  = close > bbUpper;
   const sellBreakout = close < bbLower;
