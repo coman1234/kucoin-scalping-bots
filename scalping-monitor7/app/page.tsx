@@ -45,19 +45,25 @@ function cn(...classes: (string | false | undefined | null)[]) {
 }
 
 // ── Build stamp ───────────────────────────────────────────────────────────────
+// Rendering is deferred to the client (useEffect) to avoid a React 19 hydration
+// mismatch: getHours/getDate use local timezone, which differs between the Linux
+// server (UTC) and a client browser in another timezone (e.g. Finland UTC+2/+3).
+// SSR renders just the app name; the timestamp is added after hydration.
 function BuildStamp() {
-  const raw  = process.env.NEXT_PUBLIC_BUILD_TIME;
   const name = process.env.NEXT_PUBLIC_APP_NAME ?? "Monitor";
-  const label = raw
-    ? (() => {
-        const d   = new Date(raw);
-        const dd  = String(d.getDate()).padStart(2, "0");
-        const mm  = String(d.getMonth() + 1).padStart(2, "0");
-        const hh  = String(d.getHours()).padStart(2, "0");
-        const min = String(d.getMinutes()).padStart(2, "0");
-        return `${name} · ${dd}.${mm} ${hh}:${min}`;
-      })()
-    : name;
+  const [label, setLabel] = useState(name);
+
+  useEffect(() => {
+    const raw = process.env.NEXT_PUBLIC_BUILD_TIME;
+    if (!raw) return;
+    const d   = new Date(raw);
+    const dd  = String(d.getDate()).padStart(2, "0");
+    const mm  = String(d.getMonth() + 1).padStart(2, "0");
+    const hh  = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    setLabel(`${name} · ${dd}.${mm} ${hh}:${min}`);
+  }, [name]);
+
   return <span className="text-[9px] text-text2">{label}</span>;
 }
 

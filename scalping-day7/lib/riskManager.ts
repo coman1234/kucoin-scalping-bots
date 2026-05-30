@@ -1,5 +1,5 @@
 /**
- * riskManager.ts — position sizing, circuit breakers, kill-switch for scalping-day6
+ * riskManager.ts — position sizing, circuit breakers, kill-switch for scalping-day7
  *
  * Position sizing: fixed fractional (1% risk per trade by default).
  * Circuit breaker: halt new trades when daily drawdown ≥ DAILY_DRAWDOWN_LIMIT.
@@ -30,7 +30,7 @@ const STATE_FILE = path.join(
   process.platform === "linux"
     ? path.join(os.tmpdir(), "kucoin-data")
     : path.join(os.tmpdir(), "kucoin-data"),
-  "bot6-risk-state.json",
+  "bot7-risk-state.json",
 );
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

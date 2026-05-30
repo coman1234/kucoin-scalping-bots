@@ -83,6 +83,13 @@ export interface TraderConfig {
   // Requires bot7 signal score ≥ confluenceMinScore AND same direction.
   // Set to 0 to disable (default — independent operation).
   confluenceMinScore: number;
+
+  // ── Capital allocation cap ────────────────────────────────────────────────────
+  // Maximum USDT the day7 bot may treat as its own equity (0 = no cap, use full
+  // wallet balance). Use DAY7_MAX_CAPITAL env to ring-fence a portion of the
+  // wallet for day7 so bot7 and day7 don't compete for the same funds.
+  // Example: wallet = 1000 USDT → set BOT7_MAX_CAPITAL=500 and DAY7_MAX_CAPITAL=500.
+  maxCapitalUsdt: number;
 }
 
 // ── Helper: parse env vars ────────────────────────────────────────────────────
@@ -154,4 +161,7 @@ export const CONFIG: TraderConfig = {
   // Confluence filter — 0 = disabled (independent mode)
   // Enable by setting to e.g. 5 (= require bot7 score ≥ 5/13 in same direction)
   confluenceMinScore: env("BOT7_CONFLUENCE_MIN", 0),
+
+  // Capital cap — 0 = no cap (use full wallet balance as equity)
+  maxCapitalUsdt: env("DAY7_MAX_CAPITAL", 0),
 };

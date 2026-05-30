@@ -14,6 +14,7 @@ const ALLOWED_KEYS: (keyof TraderConfig)[] = [
   "slAtrMult", "tpAtrMult", "beBroughtAt", "maxHoldMinutes",
   "riskPctPerTrade", "dailyDrawdownPct", "maxTradesPerDay",
   "maxOpenPositions", "maxNotionalPct", "minTradeUsdt", "confluenceMinScore",
+  "maxCapitalUsdt",
 ];
 
 export async function GET() {

@@ -1,5 +1,5 @@
 /**
- * dayTrader.ts — autonomous signal → order state machine for scalping-day6
+ * dayTrader.ts — autonomous signal → order state machine for scalping-day7
  *
  * ── Heitkoetter compliance summary ────────────────────────────────────────────
  * Principle #2  Fill verification: entry fill is polled before SL/TP orders.
@@ -163,7 +163,13 @@ export class DayTrader {
       } else {
         try {
           const { getUsdtBalance } = await import("./kucoinExec");
-          const equity = await getUsdtBalance();
+          const rawEquity = await getUsdtBalance();
+          // Honour the capital cap — treat only the allocated budget as equity.
+          // This prevents day7 from sizing positions off the full wallet when
+          // part of that wallet is reserved for bot7 (or other purposes).
+          const equity = CONFIG.maxCapitalUsdt > 0
+            ? Math.min(rawEquity, CONFIG.maxCapitalUsdt)
+            : rawEquity;
           rm.updateEquity(equity);
           rm.maybeDayRoll(equity);
           this.lastEquityUpdate = now;
@@ -269,8 +275,8 @@ export class DayTrader {
     let orderId: string;
     try {
       orderId = isBuy
-        ? await safeMarketBuy(sig.symbol, sizeUsdt, `bot7-${sig.score}`)
-        : await safeMarketSell(sig.symbol, (sizeUsdt / sig.entryPrice).toFixed(6), `bot7-${sig.score}`);
+        ? await safeMarketBuy(sig.symbol, sizeUsdt, `day7-${sig.score}`)
+        : await safeMarketSell(sig.symbol, (sizeUsdt / sig.entryPrice).toFixed(6), `day7-${sig.score}`);
     } catch (e) {
       console.error(`[dayTrader] Entry order failed for ${sig.symbol}:`, e);
       return;
@@ -447,8 +453,17 @@ export class DayTrader {
     );
 
     try {
-      if (isBuy) await safeMarketSell(pos.symbol, sizeB,      `close-${reason}`);
-      else        await safeMarketBuy (pos.symbol, pos.size,   `close-${reason}`);
+      if (isBuy) {
+        // Close a long: sell the base units we bought
+        await safeMarketSell(pos.symbol, sizeB, `close-${reason}`);
+      } else {
+        // Close a short: buy back the same base units we sold at entry.
+        // safeMarketBuy takes a USDT amount; spend baseUnits × currentPrice USDT
+        // so we repurchase exactly what was sold (not just the entry notional).
+        const baseUnits = pos.size / ep;
+        const fundsUsdtToRepay = baseUnits * price;
+        await safeMarketBuy(pos.symbol, fundsUsdtToRepay, `close-${reason}`);
+      }
     } catch (e) {
       console.error(`[dayTrader] Close order failed for ${pos.symbol}:`, e);
     }

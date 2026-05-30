@@ -32,6 +32,15 @@ const DEFAULT_TF       = "5min";
 const MIN_CANDLES      = 60;
 const MAX_TRADES_SAVED = 2_000;
 
+// Maximum USDT capital allocated to bot7 (0 = use full available balance).
+// Set BOT7_MAX_CAPITAL in .env to ring-fence a portion of the wallet for bot7.
+// Example: BOT7_MAX_CAPITAL=500 keeps bot7 within a 500 USDT budget while
+// the remaining balance is available for day7 or other use.
+const BOT7_MAX_CAPITAL = (() => {
+  const v = parseFloat(process.env.BOT7_MAX_CAPITAL ?? "0");
+  return isFinite(v) && v > 0 ? v : 0;
+})();
+
 export interface BotOpenPosition {
   id:                 string;
   direction:          "BUY" | "SELL";
@@ -51,6 +60,7 @@ export interface BotOpenPosition {
   unrealizedPnlUSDT:  number;
   orderId:            string;
   stopOrderId?:       string;
+  signalScore:        number;
 }
 
 export interface BotState {
@@ -451,7 +461,7 @@ async function closePosition(
     entryPrice: pos.entryPrice, exitPrice,
     entryTime: pos.entryTime, exitTime: Date.now(),
     pnlUSDT, pnlPct, exitReason: reason,
-    signalScore: 0, durationMinutes,
+    signalScore: pos.signalScore, durationMinutes,
   });
 
   botState.sessionStats.trades++;
@@ -478,7 +488,9 @@ async function enterPosition(
   timeframe: string,
 ): Promise<void> {
   const isBuy     = signal.direction === "BUY";
-  const tradeUSDT = params.tradeAmountUSDT ?? 100;
+  const rawTrade  = params.tradeAmountUSDT ?? 100;
+  // Cap trade amount to the bot7 capital budget (BOT7_MAX_CAPITAL).
+  const tradeUSDT = BOT7_MAX_CAPITAL > 0 ? Math.min(rawTrade, BOT7_MAX_CAPITAL) : rawTrade;
 
   const rr = calculateRiskReward(
     price, signal.direction as "BUY" | "SELL",
@@ -489,9 +501,11 @@ async function enterPosition(
   );
 
   const available = await getUsdtBalance();
-  if (available < tradeUSDT * 0.9) {
+  // When a capital cap is set, treat only that budget as available to bot7.
+  const effectiveBalance = BOT7_MAX_CAPITAL > 0 ? Math.min(available, BOT7_MAX_CAPITAL) : available;
+  if (effectiveBalance < tradeUSDT * 0.9) {
     log({ timestamp: Date.now(), type: "WARNING", severity: "warning",
-      title: `Insufficient balance ($${available.toFixed(2)} < $${tradeUSDT})`, symbol });
+      title: `Insufficient balance ($${effectiveBalance.toFixed(2)} < $${tradeUSDT}${BOT7_MAX_CAPITAL > 0 ? ` · cap $${BOT7_MAX_CAPITAL}` : ""})`, symbol });
     return;
   }
 
@@ -551,6 +565,7 @@ async function enterPosition(
     unrealizedPnlUSDT:  0,
     orderId,
     stopOrderId,
+    signalScore:        signal.score,
   };
 
   log({
